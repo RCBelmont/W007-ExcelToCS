@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="abdc8ad6-8b73-42b8-ab31-76f59d325a89" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Script/excel_opt_lib.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Tables/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Script/excel_opt_lib.py" beforeDir="false" afterPath="$PROJECT_DIR$/Script/excel_opt_lib.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Tables/Test1.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/Tables/Test1.xlsx" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -25,7 +25,7 @@
   <component name="ProjectId" id="1RXY1Mot5hpjGQSaaF5CBpXhpor" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
-    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
+    <property name="settings.editor.selected.configurable" value="editing.templates" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -66,7 +66,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="main" type="PythonConfigurationType" factoryName="Python">
       <module name="TableExporter" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -89,7 +89,6 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.main" />
         <item itemvalue="Python.excel_opt_lib" />
       </list>
     </recent_temporary>
