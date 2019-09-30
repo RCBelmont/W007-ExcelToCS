@@ -1,6 +1,7 @@
 import xlrd
 import os
-import enum
+from enum import Enum
+
 
 class SheetInfo:
     sheet_name = ""
@@ -10,7 +11,8 @@ class SheetInfo:
     def __init__(self):
         return
 
-class Enum_CellType(enum):
+
+class Enum_CellType(Enum):
     INT = 0
     FLOAT = 1
     STRING = 2
@@ -18,21 +20,39 @@ class Enum_CellType(enum):
     NAME = 4
     TID = 5
 
+
 class PropertyInfo:
     p_name = ""
     p_type = Enum_CellType
     p_isList = False
+    p_enumDic = {}
+
 
 def parse_sheet(sheetDic, sheetInfo):
     sheetProperty = {}
     sheetData = sheetInfo.sheet_data
     rowNum = sheetData.nrows
+    ##解析头部信息
     if rowNum >= 2:
-        headValue = sheetData.row_values(0, 0, sheetData.ncols)
-        print(headValue)
-
-
+        headValues = sheetData.row_values(0, 0, sheetData.ncols)
+        for v in headValues:
+            lines = v.splitlines()
+            print(tag_to_type(lines[1]))
     return
+
+
+def tag_to_type(tag):
+    if tag == "[Int]":
+        return Enum_CellType.INT
+    if tag == "[Float]":
+        return Enum_CellType.FLOAT
+    if tag == "[Name]":
+        return Enum_CellType.NAME
+    if tag == "[Tid]":
+        return Enum_CellType.TID
+    if tag == "[String]":
+        return Enum_CellType.STRING
+    raise Exception("抛出一个异常")
 
 
 def process_tables():
