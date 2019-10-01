@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="abdc8ad6-8b73-42b8-ab31-76f59d325a89" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/TableExporter.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/TableExporter.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Script/excel_opt_lib.py" beforeDir="false" afterPath="$PROJECT_DIR$/Script/excel_opt_lib.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Tables/Test1.xlsx" beforeDir="false" afterPath="$PROJECT_DIR$/Tables/Test1.xlsx" afterDir="false" />
@@ -25,6 +27,7 @@
   <component name="ProjectId" id="1RXY1Mot5hpjGQSaaF5CBpXhpor" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="editing.templates" />
   </component>
   <component name="RecentsManager">
@@ -111,7 +114,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>
