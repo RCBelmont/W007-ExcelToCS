@@ -5,6 +5,7 @@ from enum import Enum
 
 export_path = "../UnityProject/TableExportTest/Assets"
 
+
 class SheetInfo:
     sheet_name = ""
     file_name = ""
@@ -35,7 +36,7 @@ class PropInfo:
     p_enumIdxDic = {}  # 枚举代码名称对应的索引号
     p_enumNameDic = {}  # 枚举的中文名称对应的代码名称
     p_link_sheet = ""
-
+    p_is_list = False
 
 class PropBox(PropInfo):
     p_value_list = []
@@ -153,19 +154,23 @@ def parse_head(sheet_data: xlrd.sheet.Sheet):
         if list_length < 2:
             raise Exception("数据格式异常")
         v_name = content_list[0]
-        v_type = tag_to_type(content_list[1])
-        p_obj = PropInfo()
-        p_obj.p_name = v_name
-        p_obj.p_type = v_type
-        if v_type == Enum_CellType.ENUM:
-            idx_dic = {}
-            name_dic = {}
-            parse_enum_def(content_list[2:], idx_dic, name_dic)
-            p_obj.p_enumIdxDic = idx_dic
-            p_obj.p_enumNameDic = name_dic
-        elif v_type == Enum_CellType.LINK:
-            p_obj.p_link_sheet = content_list[2]
-        result[v_name] = p_obj
+        r = result.get(v_name, None)
+        if r is None:
+            v_type = tag_to_type(content_list[1])
+            p_obj = PropInfo()
+            p_obj.p_name = v_name
+            p_obj.p_type = v_type
+            if v_type == Enum_CellType.ENUM:
+                idx_dic = {}
+                name_dic = {}
+                parse_enum_def(content_list[2:], idx_dic, name_dic)
+                p_obj.p_enumIdxDic = idx_dic
+                p_obj.p_enumNameDic = name_dic
+            elif v_type == Enum_CellType.LINK:
+                p_obj.p_link_sheet = content_list[2]
+            result[v_name] = p_obj
+        else:
+            r.p_is_list = True
     return result
 
 
@@ -181,10 +186,10 @@ def parse_sheet(sheet_dic, key):
             value = line_values[j]
             property_name = get_property_name(sheet_data, j)
             prop_box = line_data.get(property_name, None)
+            prop_info = curr_sheet_info.prop_dic[property_name]
             if prop_box is None:
-                prop_info = curr_sheet_info.prop_dic[property_name]
                 prop_box = PropBox(prop_info)
-                line_data[property_name] = prop_box;
+                line_data[property_name] = prop_box
             if prop_box.p_type is Enum_CellType.TID:
                 prop_box.p_value_list.append(int(value))
             elif prop_box.p_type is Enum_CellType.ENUM:
@@ -263,14 +268,91 @@ def process_tables():
     for key in sheet_name_dic.keys():
         parse_sheet(sheet_name_dic, key)
 
-    full_path = export_path+"/TableExport"
+    full_path = export_path + "/TableExport"
     if os.path.exists(full_path):
         __import__('shutil').rmtree(full_path)
     os.makedirs(full_path)
 
-    file = open(full_path + "/test.cs", 'x')
-    file.write("AAAABBBBsss")
-    file.close()
+    for key in sheet_name_dic.keys():
+        sheet_info = sheet_name_dic[key]
+        file_name = sheet_info.table_name + ".cs"
+        content = ""
+        content += "//Create By Script\n"
+        content += "using System;\n"
+        content += "using System.Collections;\n"
+        content += "using System.Collections.Generic;\n"
+        content += "using UnityEngine;\n"
+        content += "class " + sheet_info.table_name + "\n"
+        content += "{\n"
+        enum_dic = {}
+        for p in sheet_info.prop_dic.values():
+            if p.p_type is Enum_CellType.ENUM:
+                if not enum_dic.__contains__(p.p_name):
+                    content += "\tpublic enum Enum_" + p.p_name + "\n"
+                    content += "\t{\n"
+                    for enum_key in p.p_enumIdxDic.keys():
+                        content += "\t\t" + enum_key + " = " + str(p.p_enumIdxDic[enum_key]) + ",\n"
+                    content += "\t}\n"
+        content += "\t\n private class TableData {\n"
+        construct = "\t\tpublic TableData("
+        construct_body = ""
+        for p in sheet_info.prop_dic.values():
+            if p.p_type is Enum_CellType.TID:
+                content += "\t\tpublic int Tid { get; }\n"
+                construct += "int tid, "
+                construct_body += "\t\t\tTid = tid;\n"
+            if p.p_type is Enum_CellType.NAME:
+                content += "\t\tpublic string Name " + " { get; }\n"
+                construct += "string name" + ", "
+                construct_body += "\t\t\tName = name;\n"
+            if p.p_type is Enum_CellType.ENUM:
+                if p.p_is_list:
+                    content += "\t\tpublic Enum_" + p.p_name + "[] " + p.p_name + " { get; }\n"
+                    construct += "ListEnum_" + p.p_name + "[] " + p.p_name.lower() + ", "
+                    construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
+                else:
+                    content += "\t\tpublic Enum_" + p.p_name + " " + p.p_name + " { get; }\n"
+                    construct += "Enum_" + p.p_name + " " + p.p_name.lower() + ", "
+                    construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
+            if p.p_type is Enum_CellType.LINK or p.p_type is p.p_type.INT:
+                if p.p_is_list:
+                    content += "\t\tpublic int " + p.p_name + " { get; }\n"
+                    construct += "int " + p.p_name.lower() + ", "
+                    construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
+                else:
+                    content += "\t\tpublic int " + p.p_name + " { get; }\n"
+                    construct += "int " + p.p_name.lower() + ", "
+                    construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
+            if p.p_type is Enum_CellType.FLOAT:
+                content += "\t\tpublic float " + p.p_name + " { get; }\n"
+                construct += "int " + p.p_name.lower() + ", "
+                construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
+            if p.p_type is Enum_CellType.STRING:
+                content += "\t\tpublic string " + p.p_name + " { get; }\n"
+                construct += "string " + p.p_name.lower() + ", "
+                construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
 
+        construct = construct[:-2]
+        construct += ")\n\t\t{\n"
+        construct += construct_body
+        construct += "\t\t}\n"
+        content += construct
+        content += "\t}\n"
+        content += "\tprivate static " + sheet_info.table_name + " _instance;\n"
+        content += "\tpublic static " + sheet_info.table_name + "Get => _instance ?? (_instance = new " + sheet_info.table_name + "());\n"
+        content += "\tprivate Dictionary<int, TableData> _dataDic = new Dictionary<int, TableData>();\n"
+        content += "\tpublic" + sheet_info.table_name +"()\n{\n"
+        for tid in sheet_info.line_data.keys():
+            line = sheet_info.line_data[tid]
+            temp = "\t\t_dataDic[" + str(tid) +"] = new TableData("
+            for v in line.values():
+                # TODO:DELETE
+                print(v.p_name)
+        content += "\t}\n"
+        content += ""
+        content += "}\n"
+
+        # TODO:DELETE
+        #print(content)
 
     return
