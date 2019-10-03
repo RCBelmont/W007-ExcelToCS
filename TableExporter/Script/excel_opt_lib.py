@@ -38,15 +38,17 @@ class PropInfo:
     p_link_sheet = ""
     p_is_list = False
 
+
 class PropBox(PropInfo):
-    p_value_list = []
+    p_value_str = ""
 
     def __init__(self, prop_info: PropInfo):
-        p_name = prop_info.p_name
-        p_type = prop_info.p_type
-        p_enumIdxDic = prop_info.p_enumIdxDic
-        p_enumNameDic = prop_info.p_enumNameDic
-        p_link_sheet = prop_info.p_link_sheet
+        self.p_name = prop_info.p_name
+        self.p_type = prop_info.p_type
+        self.p_enumIdxDic = prop_info.p_enumIdxDic
+        self.p_enumNameDic = prop_info.p_enumNameDic
+        self.p_link_sheet = prop_info.p_link_sheet
+        self.p_is_list = prop_info.p_is_list
 
 
 def parse_enum_def(enum_content_list, idx_dic, name_dic):
@@ -182,7 +184,7 @@ def parse_sheet(sheet_dic, key):
         line_data = {}
         line_values = sheet_data.row_values(i, 0, sheet_data.ncols)
         tid = int(line_values[0])
-        for j in range(1, len(line_values)):
+        for j in range(0, len(line_values)):
             value = line_values[j]
             property_name = get_property_name(sheet_data, j)
             prop_box = line_data.get(property_name, None)
@@ -191,17 +193,26 @@ def parse_sheet(sheet_dic, key):
                 prop_box = PropBox(prop_info)
                 line_data[property_name] = prop_box
             if prop_box.p_type is Enum_CellType.TID:
-                prop_box.p_value_list.append(int(value))
+                prop_box.p_value_str += str(int(value)) + ", "
             elif prop_box.p_type is Enum_CellType.ENUM:
                 code_name = prop_info.p_enumNameDic[value]
-                enum_idx = prop_info.p_enumIdxDic[code_name]
-                prop_box.p_value_list.append(int(enum_idx))
+                prop_box.p_value_str += "Enum_" + prop_info.p_name + "." + code_name + ", "
             elif prop_box.p_type is Enum_CellType.LINK:
                 link_sheet_info = sheet_dic[prop_box.p_link_sheet]
                 link_tid = link_sheet_info.name_tid_dic[value]
-                prop_box.p_value_list.append(int(link_tid))
+                prop_box.p_value_str += str(int(link_tid)) + ","
+            elif prop_box.p_type is Enum_CellType.STRING or prop_box.p_type is Enum_CellType.NAME:
+                prop_box.p_value_str += "\"" + value + "\", "
+            elif prop_box.p_type is Enum_CellType.INT:
+                if value is "":
+                    value = 0
+                prop_box.p_value_str += str(int(value)) + ", "
+            elif prop_box.p_type is Enum_CellType.FLOAT:
+                if value is "":
+                    value = 0
+                prop_box.p_value_str += str(value) + "f, "
             else:
-                prop_box.p_value_list.append(value)
+                prop_box.p_value_str += str(value) + ", "
         line_data_dic[tid] = line_data
     curr_sheet_info.line_data = line_data_dic
     return
@@ -293,43 +304,36 @@ def process_tables():
                     for enum_key in p.p_enumIdxDic.keys():
                         content += "\t\t" + enum_key + " = " + str(p.p_enumIdxDic[enum_key]) + ",\n"
                     content += "\t}\n"
-        content += "\t\n private class TableData {\n"
+        content += "\tinternal class TableData {\n"
         construct = "\t\tpublic TableData("
         construct_body = ""
         for p in sheet_info.prop_dic.values():
+            list_tag = ""
+            if p.p_is_list:
+                list_tag = "[]"
             if p.p_type is Enum_CellType.TID:
                 content += "\t\tpublic int Tid { get; }\n"
                 construct += "int tid, "
                 construct_body += "\t\t\tTid = tid;\n"
             if p.p_type is Enum_CellType.NAME:
-                content += "\t\tpublic string Name " + " { get; }\n"
-                construct += "string name" + ", "
+                content += "\t\tpublic string" + list_tag + " Name " + " { get; }\n"
+                construct += "string" + list_tag + " name" + ", "
                 construct_body += "\t\t\tName = name;\n"
             if p.p_type is Enum_CellType.ENUM:
-                if p.p_is_list:
-                    content += "\t\tpublic Enum_" + p.p_name + "[] " + p.p_name + " { get; }\n"
-                    construct += "ListEnum_" + p.p_name + "[] " + p.p_name.lower() + ", "
-                    construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
-                else:
-                    content += "\t\tpublic Enum_" + p.p_name + " " + p.p_name + " { get; }\n"
-                    construct += "Enum_" + p.p_name + " " + p.p_name.lower() + ", "
-                    construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
+                content += "\t\tpublic Enum_" + p.p_name + list_tag + " " + p.p_name + " { get; }\n"
+                construct += "Enum_" + p.p_name + list_tag + " " + p.p_name.lower() + ", "
+                construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
             if p.p_type is Enum_CellType.LINK or p.p_type is p.p_type.INT:
-                if p.p_is_list:
-                    content += "\t\tpublic int " + p.p_name + " { get; }\n"
-                    construct += "int " + p.p_name.lower() + ", "
-                    construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
-                else:
-                    content += "\t\tpublic int " + p.p_name + " { get; }\n"
-                    construct += "int " + p.p_name.lower() + ", "
-                    construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
+                content += "\t\tpublic int" + list_tag + " " + p.p_name + " { get; }\n"
+                construct += "int" + list_tag + " " + p.p_name.lower() + ", "
+                construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
             if p.p_type is Enum_CellType.FLOAT:
-                content += "\t\tpublic float " + p.p_name + " { get; }\n"
-                construct += "int " + p.p_name.lower() + ", "
+                content += "\t\tpublic float" + list_tag + " " + p.p_name + " { get; }\n"
+                construct += "float" + list_tag + " " + p.p_name.lower() + ", "
                 construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
             if p.p_type is Enum_CellType.STRING:
-                content += "\t\tpublic string " + p.p_name + " { get; }\n"
-                construct += "string " + p.p_name.lower() + ", "
+                content += "\t\tpublic string" + list_tag + " " + p.p_name + " { get; }\n"
+                construct += "string" + list_tag + " " + p.p_name.lower() + ", "
                 construct_body += "\t\t\t" + p.p_name + " = " + p.p_name.lower() + ";\n"
 
         construct = construct[:-2]
@@ -339,20 +343,27 @@ def process_tables():
         content += construct
         content += "\t}\n"
         content += "\tprivate static " + sheet_info.table_name + " _instance;\n"
-        content += "\tpublic static " + sheet_info.table_name + "Get => _instance ?? (_instance = new " + sheet_info.table_name + "());\n"
+        content += "\tpublic static " + sheet_info.table_name + " Get => _instance ?? (_instance = new " + sheet_info.table_name + "());\n"
         content += "\tprivate Dictionary<int, TableData> _dataDic = new Dictionary<int, TableData>();\n"
-        content += "\tpublic" + sheet_info.table_name +"()\n{\n"
+        content += "\tprivate " + sheet_info.table_name + "()\n\t{\n"
         for tid in sheet_info.line_data.keys():
             line = sheet_info.line_data[tid]
-            temp = "\t\t_dataDic[" + str(tid) +"] = new TableData("
+            temp = "\t\t_dataDic[" + str(tid) + "] = new TableData("
             for v in line.values():
-                # TODO:DELETE
-                print(v.p_name)
+                if v.p_is_list:
+                    temp1 = v.p_value_str[:-2]
+                    temp += "new[]{" + temp1 + "}, "
+                else:
+                    temp += v.p_value_str[:-2] + ", "
+            temp = temp[:-2]
+            temp += ");\n"
+            content += temp
         content += "\t}\n"
-        content += ""
+        content += "\tpublic TableData GetData(int tid)\n\t{\n"
+        content += "\t\t return _dataDic[tid];\n"
+        content += "\t}\n"
         content += "}\n"
-
-        # TODO:DELETE
-        #print(content)
-
+        file = open(export_path + "/TableExport" + "/" + sheet_info.table_name + ".cs", 'x', encoding='utf-8')
+        file.write(content)
+        file.close()
     return

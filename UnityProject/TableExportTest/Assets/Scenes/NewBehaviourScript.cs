@@ -7,7 +7,7 @@ using System.Security.Cryptography.X509Certificates;
 
 class TableName
 {
-    enum MyEnum
+    public enum MyEnum
     {
         GG = 1   
     }
@@ -15,7 +15,7 @@ class TableName
     public static TableName Get => _instance ?? (_instance = new TableName());
     private Dictionary<int, TableData> _dataDic = new Dictionary<int, TableData>();
     private List<MyEnum> AA;
-    private class TableData
+    internal class TableData
     {
         public int Tid { get; }
         private MyEnum[] d;
@@ -25,9 +25,14 @@ class TableName
         }
     }
 
-    public TableName()
+    private TableName()
     {
         int[] a = new[] {1, 2, 3};
         new TableData(new []{(MyEnum.GG)});
+    }
+
+    public TableData GetData(int tid)
+    {
+        return _dataDic[tid];
     }
 }

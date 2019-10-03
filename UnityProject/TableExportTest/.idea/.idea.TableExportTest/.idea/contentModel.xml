@@ -9,6 +9,10 @@
         <e p="Scenes" t="Include">
           <e p="NewBehaviourScript.cs" t="Include" />
         </e>
+        <e p="TableExport" t="Include">
+          <e p="TestTable1.cs" t="Include" />
+          <e p="TestTable2.cs" t="Include" />
+        </e>
       </e>
       <e p="obj" t="ExcludeRecursive" />
       <e p="Packages" t="ExcludeRecursive" />
